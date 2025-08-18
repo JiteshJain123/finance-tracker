@@ -1,10 +1,15 @@
 // src/app/api/transactions/[id]/route.ts
-
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// This function handles PUT requests to /api/transactions/[id]
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+// Correct type definition for the route handler's second argument
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function PUT(request: Request, { params }: RouteParams) {
   const { id } = params;
   try {
     const { amount, description, date } = await request.json();
@@ -22,8 +27,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-// This function handles DELETE requests to /api/transactions/[id]
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: RouteParams) {
   const { id } = params;
   try {
     await prisma.transaction.delete({
