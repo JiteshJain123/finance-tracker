@@ -35,9 +35,10 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
         setLoading(true);
         const res = await fetch('/api/transactions');
         const data: Transaction[] = await res.json();
-        setTransactions(data);
+        setTransactions(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch transactions', error);
+        setTransactions([]);
       } finally {
         setLoading(false);
       }
@@ -71,11 +72,7 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
       <TableBody>
         {transactions.map((transaction) => (
           <TableRow key={transaction.id}>
-            <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-            <TableCell>{transaction.description}</TableCell>
-            <TableCell className="text-right">${Number(transaction.amount).toFixed(2)}</TableCell>
-            <TableCell></TableCell> {/* Spacer cell */}
-            <TableCell className="flex space-x-2">
+            <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell><TableCell>{transaction.description}</TableCell><TableCell className="text-right">${Number(transaction.amount).toFixed(2)}</TableCell><TableCell></TableCell><TableCell className="flex space-x-2">
               <Button size="icon" variant="ghost" onClick={() => onEdit(transaction)}>
                 <Edit className="h-4 w-4" />
               </Button>
