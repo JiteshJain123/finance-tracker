@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { TransactionList } from '@/components/TransactionList';
 import { MonthlyExpenseChart } from '@/components/MonthlyExpenseChart';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Transaction {
   id: string;
@@ -18,10 +18,9 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  const handleTransactionSave = () => {
-    // Incrementing the key forces re-render of child components
+  const handleRefresh = () => {
+    // This function will be called on save or delete to trigger a refresh
     setRefreshKey(prevKey => prevKey + 1);
-    setEditingTransaction(null);
   };
 
   const handleEditTransaction = (transaction: Transaction) => {
@@ -41,27 +40,42 @@ export default function Home() {
         </header>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-              {editingTransaction ? 'Edit Transaction' : 'Add New Transaction'}
-            </h2>
-            <AddTransactionForm
-              transaction={editingTransaction}
-              onSave={handleTransactionSave}
-              onCancel={handleCancelEdit}
-            />
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Monthly Expenses</h2>
-            <MonthlyExpenseChart key={refreshKey} />
-          </div>
+          <Card className="bg-white p-6 rounded-lg shadow-md overflow-visible">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold text-gray-800">
+                {editingTransaction ? 'Edit Transaction' : 'Add New Transaction'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AddTransactionForm
+                transaction={editingTransaction}
+                onSave={handleRefresh}
+                onCancel={handleCancelEdit}
+              />
+            </CardContent>
+          </Card>
+          <Card className="bg-white p-6 rounded-lg shadow-md">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold text-gray-800">Monthly Expenses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MonthlyExpenseChart key={refreshKey} />
+            </CardContent>
+          </Card>
         </section>
 
-        <section className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">All Transactions</h2>
-          {/* Pass a prop to the list component to trigger a refresh on delete */}
-          <TransactionList onEdit={handleEditTransaction} onTransactionDeleted={() => setRefreshKey(prevKey => prevKey + 1)} key={refreshKey} />
-        </section>
+        <Card className="bg-white p-6 rounded-lg shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold text-gray-800">All Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TransactionList 
+              onEdit={handleEditTransaction} 
+              onTransactionDeleted={handleRefresh} 
+              key={refreshKey} 
+            />
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

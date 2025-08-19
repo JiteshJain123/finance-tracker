@@ -34,6 +34,12 @@ export function MonthlyExpenseChart() {
         setLoading(true);
         const res = await fetch('/api/transactions');
         const transactions: Transaction[] = await res.json();
+        
+        // Ensure transactions is an array before iterating
+        if (!Array.isArray(transactions)) {
+          setData([]);
+          return;
+        }
 
         const monthlyData: { [key: string]: { month: string; expenses: number } } = {};
         transactions.forEach(t => {

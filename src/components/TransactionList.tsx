@@ -43,12 +43,11 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
       }
     };
     fetchTransactions();
-  }, [onTransactionDeleted]); // The key prop on the parent will trigger this update
+  }, [onTransactionDeleted]);
 
   const handleDelete = async (id: string) => {
     try {
       await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
-      // Call the callback to trigger a refresh on the parent
       onTransactionDeleted();
     } catch (error) {
       console.error('Failed to delete transaction', error);
@@ -65,6 +64,7 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
           <TableHead>Date</TableHead>
           <TableHead>Description</TableHead>
           <TableHead className="text-right">Amount</TableHead>
+          <TableHead className="w-10"></TableHead> {/* Spacer column */}
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -74,6 +74,7 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
             <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
             <TableCell>{transaction.description}</TableCell>
             <TableCell className="text-right">${Number(transaction.amount).toFixed(2)}</TableCell>
+            <TableCell></TableCell> {/* Spacer cell */}
             <TableCell className="flex space-x-2">
               <Button size="icon" variant="ghost" onClick={() => onEdit(transaction)}>
                 <Edit className="h-4 w-4" />
