@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💸 FinSight – Personal Finance Tracker
 
-## Getting Started
+## 🔗 Project Links
 
-First, run the development server:
+- 📂 **GitHub Repository:** [Repo Link](https://github.com/JiteshJain123/finance-tracker)
+- 🌍 **Live Demo:** [Vercel Deployment](https://finance-tracker-wpg1.vercel.app/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📖 Project Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**FinSight** is a responsive, full-stack web application designed to provide a clean and intuitive way to manage personal finances.  
+With FinSight, users can **track, edit, and delete transactions** while getting a clear **visual overview of monthly spending**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+⚡ Built with a modern stack:
 
-## Learn More
+- 🎨 **Frontend:** Next.js (App Router), Tailwind CSS, shadcn/ui, Recharts
+- ⚙️ **Backend:** Next.js API Routes (Serverless), Prisma ORM
+- 🗄️ **Database:** PostgreSQL hosted on [Neon](https://neon.tech/)
+- 🚀 **Caching:** Redis with [Upstash](https://upstash.com/)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✅ Features Implemented (Stage 1)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+✨ **Transaction Management:** Add new transactions with amount, description, and date.  
+📝 **Edit & Delete:** Modify or remove transactions directly from the list.  
+📊 **Dynamic Charts:** Monthly expense bar chart updates in real-time on add/edit/delete.  
+✔️ **Form Validation:** Ensures proper input formatting before submission.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Setup Instructions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 📌 Prerequisites
+
+- Node.js & npm (LTS version recommended)
+- Neon Account (for PostgreSQL)
+- Upstash Account (for Redis cache)
+
+---
+
+### 🚀 Getting Started
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/JiteshJain123/finance-tracker.git
+   cd finance-tracker
+
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+
+   ```
+
+3. **Setup Environment Variables**
+   ```env
+   DATABASE_URL="<YOUR_NEON_DATABASE_URL>"
+   UPSTASH_REDIS_REST_URL="<YOUR_UPSTASH_REDIS_REST_URL>"
+   UPSTASH_REDIS_REST_TOKEN="<YOUR_UPSTASH_REDIS_REST_TOKEN>"
+
+4. **Run Prisma Migrations**
+    ```bash
+    npx prisma migrate dev --name init
+
+5. **Start the development server**
+    ```bash
+    npm run dev
+
+Now open 👉 http://localhost:3000
