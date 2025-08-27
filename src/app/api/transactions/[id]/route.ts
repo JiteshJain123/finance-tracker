@@ -1,27 +1,22 @@
 // src/app/api/transactions/[id]/route.ts
-
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 
-export async function PUT(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   const cacheKey = 'transactions:list';
-  const { id } = await params; // Await the params
-  
+  const { id } = params;
   try {
-    const { amount, description, date } = await request.json();
+    const { amount, description, date, categoryId } = await request.json();
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: {
         amount,
         description,
         date: new Date(date),
+        categoryId,
       },
     });
-
     await redis.del(cacheKey);
     return NextResponse.json(updatedTransaction);
   } catch (error) {
@@ -30,18 +25,13 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   const cacheKey = 'transactions:list';
-  const { id } = await params; // Await the params
-  
+  const { id } = params;
   try {
     await prisma.transaction.delete({
       where: { id },
     });
-
     await redis.del(cacheKey);
     return new NextResponse(null, { status: 204 });
   } catch (error) {

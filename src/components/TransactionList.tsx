@@ -18,6 +18,7 @@ interface Transaction {
   amount: number;
   description: string;
   date: string;
+  category?: { name: string } | null;
 }
 
 interface TransactionListProps {
@@ -65,14 +66,20 @@ export function TransactionList({ onEdit, onTransactionDeleted }: TransactionLis
           <TableHead>Date</TableHead>
           <TableHead>Description</TableHead>
           <TableHead className="text-right">Amount</TableHead>
-          <TableHead className="w-10"></TableHead> {/* Spacer column */}
+          <TableHead className="w-10"></TableHead>
+          <TableHead>Category</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {transactions.map((transaction) => (
           <TableRow key={transaction.id}>
-            <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell><TableCell>{transaction.description}</TableCell><TableCell className="text-right">${Number(transaction.amount).toFixed(2)}</TableCell><TableCell></TableCell><TableCell className="flex space-x-2">
+            <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
+            <TableCell>{transaction.description}</TableCell>
+            <TableCell className="text-right">${Number(transaction.amount).toFixed(2)}</TableCell>
+            <TableCell></TableCell>
+            <TableCell>{transaction.category?.name || 'Uncategorized'}</TableCell>
+            <TableCell className="flex space-x-2">
               <Button size="icon" variant="ghost" onClick={() => onEdit(transaction)}>
                 <Edit className="h-4 w-4" />
               </Button>

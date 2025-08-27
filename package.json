@@ -2,21 +2,23 @@
   "name": "financial-tracker",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "prisma migrate deploy && prisma generate && next build",
-    "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate && prisma migrate deploy",
-    "prisma:migrate": "npx prisma migrate dev",
-    "prisma:seed": "npx tsc prisma/seed.ts && node prisma/seed.js"
-  },
+"scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "prisma:migrate:dev": "npx prisma migrate dev",
+  "prisma:migrate:deploy": "npx prisma migrate deploy",
+  "prisma:generate": "npx prisma generate",
+  "prisma:seed": "npx tsc --project tsconfig.json && node prisma/seed.js"
+},
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.14.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@upstash/redis": "^1.35.3",

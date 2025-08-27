@@ -21,10 +21,10 @@ model Transaction {
 }
 
 model Category {
-  id           String    @id @default(uuid())
-  name         String    @unique
+  id           String      @id @default(uuid())
+  name         String      @unique
   transactions Transaction[]
-  budget       Budget?
+  budgets      Budget[]
 }
 
 model Budget {
@@ -34,5 +34,7 @@ model Budget {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   category    Category @relation(fields: [categoryId], references: [id])
-  categoryId  String   @unique
+  categoryId  String
+
+  @@unique([categoryId, month])
 }

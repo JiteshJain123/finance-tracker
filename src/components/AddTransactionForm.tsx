@@ -6,8 +6,13 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface Category {
+  id: string;
+  name: string;
+}
 // Define the Zod schema for validation.
 const transactionSchema = z.object({
   id: z.string().optional(),
@@ -16,6 +21,7 @@ const transactionSchema = z.object({
   date: z
     .string()
     .refine((val) => !isNaN(new Date(val).getTime()), "Invalid date format."),
+    categoryId: z.string().optional(),
 });
 
 // Infer the TypeScript type for the final, validated form data.
@@ -35,10 +41,12 @@ export function AddTransactionForm({
   transaction,
   onCancel,
 }: AddTransactionFormProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<
     z.input<typeof transactionSchema>, // input type
@@ -54,6 +62,19 @@ export function AddTransactionForm({
     },
   });
 
+   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data: Category[] = await res.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     if (transaction) {
       const formattedDate = new Date(transaction.date)
@@ -64,14 +85,18 @@ export function AddTransactionForm({
         amount: transaction.amount.toString(),
         date: formattedDate,
       });
+       if (transaction.categoryId) {
+        setValue('categoryId', transaction.categoryId);
+      }
     } else {
       reset({
         amount: "",
         description: "",
         date: "",
+        categoryId: '',
       });
     }
-  }, [transaction, reset]);
+  }, [transaction, reset, setValue]);
 
   const onSubmit: SubmitHandler<TransactionFormValues> = async (data) => {
     try {
@@ -104,38 +129,46 @@ export function AddTransactionForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="amount">Amount</Label>
-        <Input id="amount" type="number" step="0.01" {...register("amount")} />
-        {errors.amount && (
-          <p className="text-red-500 text-sm">{errors.amount.message}</p>
-        )}
+        <Input id="amount" type="number" step="0.01" {...register('amount')} />
+        {errors.amount && <p className="text-red-500 text-sm">{errors.amount.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Input id="description" {...register("description")} />
-        {errors.description && (
-          <p className="text-red-500 text-sm">{errors.description.message}</p>
-        )}
+        <Input id="description" {...register('description')} />
+        {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
-        <Input
-          id="date"
-          type="date"
-          {...register("date")}
+        <Input 
+          id="date" 
+          type="date" 
+          {...register('date')}
           readOnly={!!transaction}
           className={!!transaction ? "bg-gray-200 cursor-not-allowed" : ""}
         />
-        {errors.date && (
-          <p className="text-red-500 text-sm">{errors.date.message}</p>
-        )}
+        {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="category">Category</Label>
+        <Select
+          onValueChange={(value) => setValue('categoryId', value)}
+          defaultValue={transaction?.categoryId}
+        >
+          <SelectTrigger className="w-full" id="category">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent className="z-50">
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex space-x-2">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting
-            ? "Saving..."
-            : transaction
-            ? "Update Transaction"
-            : "Save Transaction"}
+          {isSubmitting ? 'Saving...' : (transaction ? 'Update Transaction' : 'Save Transaction')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
