@@ -1,7 +1,9 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-const prisma = new PrismaClient();
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 const categories = [
   'Food & Groceries',
@@ -19,25 +21,27 @@ const categories = [
   'Investments',
   'Gifts & Donations',
   'Miscellaneous',
-];
+]
 
 async function main() {
-  console.log('Seeding categories...');
+  console.log('🌱 Seeding categories...')
+
   for (const name of categories) {
     await prisma.category.upsert({
       where: { name },
       update: {},
       create: { name },
-    });
+    })
   }
-  console.log('Categories seeded successfully.');
+
+  console.log('✅ Categories seeded successfully.')
 }
 
 main()
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })
