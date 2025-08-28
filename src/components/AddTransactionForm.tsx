@@ -88,31 +88,30 @@ export function AddTransactionForm({
   // Debug: Watch the categoryId value
   const watchedCategoryId = watch("categoryId");
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoadingCategories(true);
-        setApiError("");
-        
-        const res = await fetch('/api/categories');
-        
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
-        const data: Category[] = await res.json();
-        setCategories(data);
-        
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        setApiError(error instanceof Error ? error.message : 'Unknown error');
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      setApiError("");
+      
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      
+      const data: Category[] = await res.json();
+      setCategories(data.length > 0 ? data : fallbackCategories);
+      
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      setCategories(fallbackCategories);
+      setApiError(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+  
+  fetchCategories();
+}, []);
+
 
   useEffect(() => {
     console.log('Categories state:', categories);
