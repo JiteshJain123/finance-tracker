@@ -49,6 +49,25 @@ export function AddTransactionForm({
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [apiError, setApiError] = useState<string>("");
 
+  // Fallback categories (same as your seed data)
+  const fallbackCategories: Category[] = [
+    { id: 'food-groceries', name: 'Food & Groceries' },
+    { id: 'housing-rent', name: 'Housing & Rent' },
+    { id: 'transportation', name: 'Transportation' },
+    { id: 'utilities', name: 'Utilities' },
+    { id: 'entertainment', name: 'Entertainment' },
+    { id: 'shopping', name: 'Shopping' },
+    { id: 'healthcare', name: 'Healthcare' },
+    { id: 'personal-care', name: 'Personal Care' },
+    { id: 'education', name: 'Education' },
+    { id: 'travel', name: 'Travel' },
+    { id: 'debt-payments', name: 'Debt Payments' },
+    { id: 'savings', name: 'Savings' },
+    { id: 'investments', name: 'Investments' },
+    { id: 'gifts-donations', name: 'Gifts & Donations' },
+    { id: 'miscellaneous', name: 'Miscellaneous' },
+  ];
+
   const {
     register,
     handleSubmit,
