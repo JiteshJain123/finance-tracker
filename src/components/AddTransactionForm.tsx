@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,26 +13,30 @@ interface Category {
   id: string;
   name: string;
 }
-// Define the Zod schema for validation.
+
+interface Transaction {
+  id?: string;
+  amount: number;
+  description: string;
+  date: string;
+  categoryId?: string;
+}
+
 const transactionSchema = z.object({
   id: z.string().optional(),
-  amount: z.coerce.number().positive("Amount must be positive."),
+  amount: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be a positive number"
+  }),
   description: z.string().min(1, "Description is required."),
-  date: z
-    .string()
-    .refine((val) => !isNaN(new Date(val).getTime()), "Invalid date format."),
-    categoryId: z.string().optional(),
+  date: z.string().min(1, "Date is required."),
+  categoryId: z.string().min(1, "Category is required."),
 });
 
-// Infer the TypeScript type for the final, validated form data.
-type TransactionFormValues = z.infer<typeof transactionSchema>;
+type FormData = z.infer<typeof transactionSchema>;
 
-// Define a separate type for the raw string inputs from the form.
-
-// Define the props interface for the component.
 interface AddTransactionFormProps {
   onSave: () => void;
-  transaction?: TransactionFormValues | null;
+  transaction?: Transaction | null;
   onCancel?: () => void;
 }
 
@@ -42,38 +46,80 @@ export function AddTransactionForm({
   onCancel,
 }: AddTransactionFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [apiError, setApiError] = useState<string>("");
+
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
+    control,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<
-    z.input<typeof transactionSchema>, // input type
-    unknown,
-    z.output<typeof transactionSchema> // output type
-  >({
+  } = useForm<FormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      amount: "", // as a string (input)
+      amount: "",
       description: "",
       date: "",
-      id: undefined,
+      categoryId: "",
     },
   });
 
-   useEffect(() => {
+  // Debug: Watch the categoryId value
+  const watchedCategoryId = watch("categoryId");
+
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
+        setIsLoadingCategories(true);
+        setApiError("");
+        
+        console.log('Fetching categories from /api/categories'); // Debug log
+        
         const res = await fetch('/api/categories');
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data: Category[] = await res.json();
+        console.log('Categories fetched:', data); // Debug log
+        
         setCategories(data);
+        
+        // If no categories, add some fallback ones for testing
+        if (data.length === 0) {
+          console.warn('No categories found, using fallback');
+          setCategories([
+            { id: 'fallback-1', name: 'General' },
+            { id: 'fallback-2', name: 'Food' },
+            { id: 'fallback-3', name: 'Transport' }
+          ]);
+        }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
+        setApiError(error instanceof Error ? error.message : 'Unknown error');
+        
+        // Set fallback categories for testing
+        setCategories([
+          { id: 'fallback-1', name: 'General' },
+          { id: 'fallback-2', name: 'Food' },
+          { id: 'fallback-3', name: 'Transport' }
+        ]);
+      } finally {
+        setIsLoadingCategories(false);
       }
     };
+    
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    console.log('Categories state:', categories); // Debug log
+    console.log('Loading state:', isLoadingCategories); // Debug log
+    console.log('Current categoryId:', watchedCategoryId); // Debug log
+  }, [categories, isLoadingCategories, watchedCategoryId]);
 
   useEffect(() => {
     if (transaction) {
@@ -81,35 +127,41 @@ export function AddTransactionForm({
         .toISOString()
         .split("T")[0];
       reset({
-        ...transaction,
-        amount: transaction.amount.toString(),
+        id: transaction.id || "",
+        amount: String(transaction.amount || ""),
+        description: transaction.description || "",
         date: formattedDate,
+        categoryId: transaction.categoryId || "",
       });
-       if (transaction.categoryId) {
-        setValue('categoryId', transaction.categoryId);
-      }
     } else {
       reset({
         amount: "",
         description: "",
-        date: "",
-        categoryId: '',
+        date: new Date().toISOString().split("T")[0],
+        categoryId: "",
       });
     }
-  }, [transaction, reset, setValue]);
+  }, [transaction, reset]);
 
-  const onSubmit: SubmitHandler<TransactionFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      console.log('Submitting form data:', data); // Debug log
+      
       const isEditing = !!transaction;
       const url = isEditing
         ? `/api/transactions/${transaction?.id}`
         : "/api/transactions";
       const method = isEditing ? "PUT" : "POST";
 
+      const submitData = {
+        ...data,
+        amount: Number(data.amount),
+      };
+
       const response = await fetch(url, {
         method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -118,7 +170,7 @@ export function AddTransactionForm({
         );
       }
 
-      console.log("Transaction saved successfully!", data);
+      console.log("Transaction saved successfully!", submitData);
       onSave();
     } catch (error) {
       console.error("Submission error:", error);
@@ -127,55 +179,87 @@ export function AddTransactionForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="amount">Amount</Label>
-        <Input id="amount" type="number" step="0.01" {...register('amount')} />
-        {errors.amount && <p className="text-red-500 text-sm">{errors.amount.message}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Input id="description" {...register('description')} />
-        {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="date">Date</Label>
-        <Input 
-          id="date" 
-          type="date" 
-          {...register('date')}
-          readOnly={!!transaction}
-          className={!!transaction ? "bg-gray-200 cursor-not-allowed" : ""}
-        />
-        {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Select
-          onValueChange={(value) => setValue('categoryId', value)}
-          defaultValue={transaction?.categoryId}
-        >
-          <SelectTrigger className="w-full" id="category">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent className="z-50">
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex space-x-2">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : (transaction ? 'Update Transaction' : 'Save Transaction')}
-        </Button>
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+        <div className="space-y-2">
+          <Label htmlFor="amount">Amount</Label>
+          <Input 
+            id="amount" 
+            type="number" 
+            step="0.01" 
+            {...register('amount')} 
+          />
+          {errors.amount && <p className="text-red-500 text-sm">{errors.amount.message}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Input id="description" {...register('description')} />
+          {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="date">Date</Label>
+          <Input 
+            id="date" 
+            type="date" 
+            {...register('date')}
+            readOnly={!!transaction}
+            className={!!transaction ? "bg-gray-200 cursor-not-allowed" : ""}
+          />
+          {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Controller
+            name="categoryId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                onValueChange={(value) => {
+                  console.log('Category selected:', value); // Debug log
+                  field.onChange(value);
+                }}
+                value={field.value}
+                disabled={isLoadingCategories}
+              >
+                <SelectTrigger className="w-full" id="category">
+                  <SelectValue 
+                    placeholder={
+                      isLoadingCategories 
+                        ? "Loading categories..." 
+                        : categories.length === 0 
+                        ? "No categories available"
+                        : "Select a category"
+                    } 
+                  />
+                </SelectTrigger>
+                <SelectContent className="z-[9999] bg-white border shadow-lg">
+                  {categories.map((category) => (
+                    <SelectItem 
+                      key={category.id} 
+                      value={category.id}
+                      className="cursor-pointer hover:bg-gray-100"
+                    >
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.categoryId && <p className="text-red-500 text-sm">{errors.categoryId.message}</p>}
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button type="submit" disabled={isSubmitting || isLoadingCategories}>
+            {isSubmitting ? 'Saving...' : (transaction ? 'Update Transaction' : 'Save Transaction')}
           </Button>
-        )}
-      </div>
-    </form>
-  );
-}
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      </form>
+    );
+  }
