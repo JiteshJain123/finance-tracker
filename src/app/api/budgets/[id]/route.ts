@@ -1,8 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function PUT(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const { amount, month, categoryId } = await request.json();
     const updatedBudget = await prisma.budget.update({
@@ -19,8 +22,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     await prisma.budget.delete({
       where: { id },
