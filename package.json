@@ -2,16 +2,17 @@
   "name": "financial-tracker",
   "version": "0.1.0",
   "private": true,
-"scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "next lint",
-  "prisma:migrate:dev": "npx prisma migrate dev",
-  "prisma:migrate:deploy": "npx prisma migrate deploy",
-  "prisma:generate": "npx prisma generate",
-  "prisma:seed": "npx tsc --project tsconfig.json && node prisma/seed.js"
-},
+  "scripts": {
+    "dev": "next dev",
+    "build": "npx prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:migrate:dev": "npx prisma migrate dev",
+    "prisma:migrate:deploy": "npx prisma migrate deploy",
+    "prisma:generate": "npx prisma generate",
+    "prisma:seed": "npx tsc --project tsconfig.json && node prisma/seed.js",
+    "postinstall": "npx prisma generate"
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.14.0",
