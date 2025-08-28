@@ -75,8 +75,6 @@ export function AddTransactionForm({
         setIsLoadingCategories(true);
         setApiError("");
         
-        console.log('Fetching categories from /api/categories'); // Debug log
-        
         const res = await fetch('/api/categories');
         
         if (!res.ok) {
@@ -84,29 +82,11 @@ export function AddTransactionForm({
         }
         
         const data: Category[] = await res.json();
-        console.log('Categories fetched:', data); // Debug log
-        
         setCategories(data);
         
-        // If no categories, add some fallback ones for testing
-        if (data.length === 0) {
-          console.warn('No categories found, using fallback');
-          setCategories([
-            { id: 'fallback-1', name: 'General' },
-            { id: 'fallback-2', name: 'Food' },
-            { id: 'fallback-3', name: 'Transport' }
-          ]);
-        }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
         setApiError(error instanceof Error ? error.message : 'Unknown error');
-        
-        // Set fallback categories for testing
-        setCategories([
-          { id: 'fallback-1', name: 'General' },
-          { id: 'fallback-2', name: 'Food' },
-          { id: 'fallback-3', name: 'Transport' }
-        ]);
       } finally {
         setIsLoadingCategories(false);
       }
@@ -116,9 +96,9 @@ export function AddTransactionForm({
   }, []);
 
   useEffect(() => {
-    console.log('Categories state:', categories); // Debug log
-    console.log('Loading state:', isLoadingCategories); // Debug log
-    console.log('Current categoryId:', watchedCategoryId); // Debug log
+    console.log('Categories state:', categories);
+    console.log('Loading state:', isLoadingCategories);
+    console.log('Current categoryId:', watchedCategoryId);
   }, [categories, isLoadingCategories, watchedCategoryId]);
 
   useEffect(() => {
@@ -216,7 +196,7 @@ export function AddTransactionForm({
             render={({ field }) => (
               <Select
                 onValueChange={(value) => {
-                  console.log('Category selected:', value); // Debug log
+                  console.log('Category selected:', value);
                   field.onChange(value);
                 }}
                 value={field.value}
