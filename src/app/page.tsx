@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TransactionList } from '@/components/TransactionList';
 import { MonthlyExpenseChart } from '@/components/MonthlyExpenseChart';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
@@ -14,6 +14,12 @@ import { BudgetComparisonChart } from '@/components/BudgetComparisonChart';
 import { SpendingInsights } from '@/components/SpendingInsights';
 import { BudgetList } from '@/components/BudgetList';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Example fetcher - replace with your API call / db query
+async function getAllTransactions(): Promise<Transaction[]> {
+  const res = await fetch('/api/transactions'); // <- adjust to your API
+  return res.json();
+}
 
 interface Transaction {
   id: string;
@@ -42,6 +48,30 @@ export default function Home() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+
+  // 🔄 Load available months dynamically from transactions
+  useEffect(() => {
+    async function fetchMonths() {
+      try {
+        const transactions = await getAllTransactions();
+        const months = Array.from(
+          new Set(transactions.map((t) => t.date.slice(0, 7)))
+        ).sort((a, b) => (a < b ? 1 : -1)); // newest first
+        setAvailableMonths(months);
+
+        // Ensure currentMonth is always valid
+        if (!months.includes(currentMonth)) {
+          setSelectedMonth(months[0] || currentMonth);
+        }
+      } catch (err) {
+        console.error('Error loading months:', err);
+        setAvailableMonths([currentMonth]);
+      }
+    }
+
+    fetchMonths();
+  }, [refreshKey]);
 
   const handleRefresh = () => {
     setRefreshKey((prevKey) => prevKey + 1);
@@ -64,25 +94,24 @@ export default function Home() {
     setEditingTransaction(null);
   };
 
-  const availableMonths = ["2025-08", "2025-07", "2025-06", "2025-05"]; // Example: Populate dynamically from transactions later
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-8">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 p-6 lg:p-10">
       <div className="container mx-auto">
         {/* Header */}
         <header className="mb-12 text-center">
-          <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 drop-shadow-sm">
+          <h1 className="text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 drop-shadow-lg animate-fade-in">
             FinSight Dashboard
           </h1>
-          <p className="mt-3 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-600">
             Track your finances, visualize spending, and plan smarter
           </p>
         </header>
 
         {/* Main Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-12">
+          {/* Left content */}
           <div className="lg:col-span-2 space-y-10 relative z-10">
-            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl overflow-visible">
+            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-visible">
               <CardHeader>
                 <CardTitle className="text-2xl font-semibold text-indigo-700 flex items-center gap-2">
                   {editingTransaction ? '✏️ Edit Transaction' : '➕ Add New Transaction'}
@@ -97,7 +126,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-2xl font-semibold text-indigo-700">
                   📊 Monthly Expenses
@@ -108,7 +137,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-2xl font-semibold text-indigo-700">
                   🥧 Category Breakdown
@@ -122,16 +151,16 @@ export default function Home() {
 
           {/* Sidebar */}
           <aside className="lg:col-span-1 space-y-10 relative z-20">
-            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-indigo-700 mb-2">
+                <CardTitle className="text-2xl font-semibold text-indigo-700 mb-3">
                   📅 Summary for
                 </CardTitle>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a month" />
                   </SelectTrigger>
-                  <SelectContent className="z-50">
+                  <SelectContent className="z-50 max-h-60">
                     {availableMonths.map((month) => (
                       <SelectItem key={month} value={month}>
                         {new Date(`${month}-01`).toLocaleDateString('en-US', {
@@ -149,7 +178,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl overflow-visible">
+            <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-visible">
               <CardHeader>
                 <CardTitle className="text-2xl font-semibold text-indigo-700">
                   {editingBudget ? '✏️ Edit Budget' : '💰 Set Budget'}
@@ -168,7 +197,7 @@ export default function Home() {
 
         {/* Secondary Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-          <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+          <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-indigo-700">
                 📈 Budget vs. Actual
@@ -179,7 +208,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+          <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-indigo-700">
                 🔍 Spending Insights
@@ -192,7 +221,7 @@ export default function Home() {
         </section>
 
         {/* Transactions + Budgets */}
-        <Card className="mb-10 backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+        <Card className="mb-10 backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-indigo-700">
               📑 All Transactions
@@ -207,7 +236,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 rounded-2xl">
+        <Card className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-indigo-700">
               📌 All Budgets
